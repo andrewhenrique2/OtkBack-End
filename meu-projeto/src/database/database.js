@@ -1,14 +1,38 @@
 const sqlite3 = require('sqlite3').verbose();
-
-// Crie uma nova instância do banco de dados SQLite
 const db = new sqlite3.Database('anime.db');
 
-// Crie a tabela de animes se ainda não existir
 db.serialize(() => {
-  db.run("CREATE TABLE IF NOT EXISTS animes (id INTEGER PRIMARY KEY, title TEXT, description TEXT, imageUrl TEXT, score INTEGER)");
+  db.run(`CREATE TABLE IF NOT EXISTS animes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    description TEXT,
+    imageUrl TEXT,
+    episodeNumber INTEGER,
+    videoUrl TEXT
+  )`);
 
-  // Crie a tabela de episódios se ainda não existir
-  db.run("CREATE TABLE IF NOT EXISTS episodes (id INTEGER PRIMARY KEY, animeId INTEGER, title TEXT, episodeNumber INTEGER, description TEXT, videoUrl TEXT, FOREIGN KEY(animeId) REFERENCES animes(id))");
+  db.run(`CREATE TABLE IF NOT EXISTS episodes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    animeId INTEGER,
+    title TEXT,
+    episodeNumber INTEGER,
+    description TEXT,
+    videoUrl TEXT,
+    FOREIGN KEY(animeId) REFERENCES animes(id)
+  )`);
+
+  // Adicione esta linha para incluir a coluna videoUrl na tabela animes, se ainda não existir
+  db.run("ALTER TABLE animes ADD COLUMN videoUrl TEXT", (err) => {
+    if (err) {
+      if (err.message.includes("duplicate column name")) {
+        console.log("Coluna videoUrl já existe.");
+      } else {
+        console.error("Erro ao adicionar coluna videoUrl:", err);
+      }
+    } else {
+      console.log("Coluna videoUrl adicionada com sucesso.");
+    }
+  });
 });
 
 module.exports = db;
