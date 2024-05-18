@@ -59,7 +59,7 @@ router.post('/login', [
 
       if (isMatch) {
         const token = jwt.sign({ id: user.id, role: user.role }, secret, { expiresIn: '1h' });
-        res.json({ token });
+        res.json({ token, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
       } else {
         res.status(400).json({ message: 'Senha incorreta' });
       }
