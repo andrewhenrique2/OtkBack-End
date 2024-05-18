@@ -1,6 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/database');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
+
+// Rota para obter informações de um anime específico
+router.get('/anime-info/:animeId', (req, res, next) => {
+  const animeId = req.params.animeId;
+  console.log("Recebido GET em /anime-info com animeId:", animeId);
+  db.get("SELECT * FROM animes WHERE id = ?", [animeId], (err, row) => {
+    if (err) {
+      console.error("Erro ao buscar anime:", err);
+      next(err);
+    } else if (row) {
+      db.all("SELECT id, title, episodeNumber, description, videoUrl FROM episodes WHERE animeId = ?", [animeId], (err, episodes) => {
+        if (err) {
+          console.error("Erro ao buscar episódios:", err);
+          next(err);
+        } else {
+          console.log("Episódios recuperados do banco de dados:", episodes);
+          res.json({ ...row, episodes });
+        }
+      });
+    } else {
+      res.status(404).json({ message: 'Anime não encontrado' });
+    }
+  });
+});
 
 // Rota para obter todos os animes junto com seus episódios
 router.get('/animes', (req, res, next) => {
@@ -28,8 +54,8 @@ router.get('/animes', (req, res, next) => {
   });
 });
 
-// Rota para adicionar um novo anime
-router.post('/animes', (req, res, next) => {
+// Rota para adicionar um novo anime (apenas administradores)
+router.post('/animes', [auth, admin], (req, res, next) => {
   const { title, description, imageUrl, episodeNumber, videoUrl } = req.body;
   console.log("Recebido POST em /animes com dados:", req.body);
   db.run("INSERT INTO animes (title, description, imageUrl, episodeNumber, videoUrl) VALUES (?, ?, ?, ?, ?)", [title, description, imageUrl, episodeNumber, videoUrl], function (err) {
@@ -43,8 +69,8 @@ router.post('/animes', (req, res, next) => {
   });
 });
 
-// Rota para adicionar um novo episódio a um anime existente
-router.post('/animes/:animeId/episodes', (req, res, next) => {
+// Rota para adicionar um novo episódio a um anime existente (apenas administradores)
+router.post('/animes/:animeId/episodes', [auth, admin], (req, res, next) => {
   const { title, episodeNumber, description, videoUrl } = req.body;
   const { animeId } = req.params;
   console.log("Recebido POST em /animes/:animeId/episodes com dados:", req.body);
@@ -59,32 +85,8 @@ router.post('/animes/:animeId/episodes', (req, res, next) => {
   });
 });
 
-// Rota para obter informações de um anime específico
-router.get('/anime-info/:animeId', (req, res, next) => {
-  const animeId = req.params.animeId;
-  console.log("Recebido GET em /anime-info com animeId:", animeId);
-  db.get("SELECT * FROM animes WHERE id = ?", [animeId], (err, row) => {
-    if (err) {
-      console.error("Erro ao buscar anime:", err);
-      next(err);
-    } else if (row) {
-      db.all("SELECT id, title, episodeNumber, description, videoUrl FROM episodes WHERE animeId = ?", [animeId], (err, episodes) => {
-        if (err) {
-          console.error("Erro ao buscar episódios:", err);
-          next(err);
-        } else {
-          console.log("Episódios recuperados do banco de dados:", episodes);
-          res.json({ ...row, episodes });
-        }
-      });
-    } else {
-      res.status(404).json({ message: 'Anime não encontrado' });
-    }
-  });
-});
-
-// Rota para remover um anime
-router.delete('/animes/:animeId', (req, res, next) => {
+// Rota para remover um anime (apenas administradores)
+router.delete('/animes/:animeId', [auth, admin], (req, res, next) => {
   const animeId = req.params.animeId;
   console.log("Recebido DELETE em /animes com animeId:", animeId);
 
