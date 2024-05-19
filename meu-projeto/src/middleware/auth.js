@@ -1,8 +1,10 @@
+// src/middleware/auth.js
 const jwt = require('jsonwebtoken');
 const secret = 'your_jwt_secret';
 
 const auth = (req, res, next) => {
-  const token = req.header('x-auth-token');
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'Nenhum token, autorização negada' });
   }
