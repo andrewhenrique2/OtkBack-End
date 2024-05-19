@@ -6,3 +6,4 @@ const admin = (req, res, next) => {
 };
 
 module.exports = admin;
+// teste de commit
