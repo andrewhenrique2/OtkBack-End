@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const db = require('../database/database');
+const auth = require('../middleware/auth');  // Adicione esta linha para importar o middleware `auth`
 const router = express.Router();
 
 const secret = 'your_jwt_secret';
@@ -68,28 +69,18 @@ router.post('/login', [
 });
 
 // Rota para obter informações do usuário logado
-router.get('/me', (req, res) => {
-  const token = req.header('x-auth-token');
-  if (!token) {
-    return res.status(401).json({ message: 'Nenhum token, autorização negada' });
-  }
+router.get('/me', auth, (req, res) => {  // Certifique-se de que o middleware `auth` está sendo usado aqui
+  db.get("SELECT id, username, email, role FROM users WHERE id = ?", [req.user.id], (err, user) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro ao buscar informações do usuário' });
+    }
 
-  try {
-    const decoded = jwt.verify(token, secret);
-    db.get("SELECT id, username, email, role FROM users WHERE id = ?", [decoded.id], (err, user) => {
-      if (err) {
-        return res.status(500).json({ message: 'Erro ao buscar informações do usuário' });
-      }
+    if (!user) {
+      return res.status(400).json({ message: 'Usuário não encontrado' });
+    }
 
-      if (!user) {
-        return res.status(400).json({ message: 'Usuário não encontrado' });
-      }
-
-      res.json(user);
-    });
-  } catch (e) {
-    res.status(400).json({ message: 'Token inválido' });
-  }
+    res.json(user);
+  });
 });
 
 module.exports = router;
