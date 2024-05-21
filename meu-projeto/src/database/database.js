@@ -1,3 +1,4 @@
+// src/database/database.js
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('anime.db');
 
@@ -29,9 +30,8 @@ db.serialize(() => {
       role TEXT DEFAULT 'user'
     )`);
 
-    // Adicionando a tabela recent_animes
     db.run(`CREATE TABLE IF NOT EXISTS recent_animes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       title TEXT,
       description TEXT,
       imageUrl TEXT,
@@ -39,9 +39,9 @@ db.serialize(() => {
       videoUrl TEXT
     )`);
 
-    // Adicionando a tabela films
+    // Atualize a tabela films para usar TEXT para o id
     db.run(`CREATE TABLE IF NOT EXISTS films (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       title TEXT,
       description TEXT,
       imageUrl TEXT,

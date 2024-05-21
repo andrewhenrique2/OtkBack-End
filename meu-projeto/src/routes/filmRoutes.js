@@ -1,13 +1,14 @@
+// src/routes/filmRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/database');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const { v4: uuidv4 } = require('uuid'); // Importar uuid
 
 // Rota para obter informações de um filme específico
 router.get('/film-info/:filmId', (req, res, next) => {
   const filmId = req.params.filmId;
-  console.log("Recebido GET em /film-info com filmId:", filmId);
   db.get("SELECT * FROM films WHERE id = ?", [filmId], (err, row) => {
     if (err) {
       console.error("Erro ao buscar filme:", err);
@@ -35,14 +36,15 @@ router.get('/films', (req, res, next) => {
 // Rota para adicionar um novo filme (apenas administradores)
 router.post('/films', [auth, admin], (req, res, next) => {
   const { title, description, imageUrl, videoUrl } = req.body;
+  const id = uuidv4(); // Gerar ID único
   console.log("Recebido POST em /films com dados:", req.body);
-  db.run("INSERT INTO films (title, description, imageUrl, videoUrl) VALUES (?, ?, ?, ?)", [title, description, imageUrl, videoUrl], function (err) {
+  db.run("INSERT INTO films (id, title, description, imageUrl, videoUrl) VALUES (?, ?, ?, ?, ?)", [id, title, description, imageUrl, videoUrl], function (err) {
     if (err) {
       console.error("Erro ao adicionar filme:", err);
       next(err);
     } else {
-      console.log("Filme adicionado com sucesso com ID:", this.lastID);
-      res.status(201).json({ message: 'Filme adicionado com sucesso!', id: this.lastID });
+      console.log("Filme adicionado com sucesso com ID:", id);
+      res.status(201).json({ message: 'Filme adicionado com sucesso!', id: id });
     }
   });
 });
@@ -50,8 +52,6 @@ router.post('/films', [auth, admin], (req, res, next) => {
 // Rota para remover um filme (apenas administradores)
 router.delete('/films/:filmId', [auth, admin], (req, res, next) => {
   const filmId = req.params.filmId;
-  console.log("Recebido DELETE em /films com filmId:", filmId);
-
   db.run("DELETE FROM films WHERE id = ?", [filmId], function(err) {
     if (err) {
       console.error("Erro ao deletar filme:", err);
