@@ -1,6 +1,8 @@
 
 ### README para o Backend
 
+Acesse o Front-end - > https://github.com/andrewhenrique2/Otakulandia
+
 ```markdown
 # Otakulandia - Backend 🌟
 
