@@ -1,6 +1,24 @@
-// src/database/database.js
+const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('anime.db');
+
+// Defina o caminho para o arquivo de banco de dados
+const dbPath = path.resolve(__dirname, 'anime.db');
+
+// Verifique se o arquivo de banco de dados existe
+if (!fs.existsSync(dbPath)) {
+  console.error('Erro: O arquivo de banco de dados não foi encontrado no caminho:', dbPath);
+  process.exit(1); // Sai do processo com um código de erro
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Erro ao abrir o banco de dados:', err.message);
+    process.exit(1); // Sai do processo com um código de erro
+  } else {
+    console.log('Conectado ao banco de dados SQLite.');
+  }
+});
 
 db.serialize(() => {
   try {
@@ -39,7 +57,6 @@ db.serialize(() => {
       videoUrl TEXT
     )`);
 
-    // Atualize a tabela films para usar TEXT para o id
     db.run(`CREATE TABLE IF NOT EXISTS films (
       id TEXT PRIMARY KEY,
       title TEXT,
