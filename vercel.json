@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "src/server.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "PORT": "3000",
-    "JWT_SECRET": "2a4d8b22cfbd4e98a74b5e6cd91f8e2f4d98f6b6b1c3d2a0e4f7a3c5b9e6d7c8"
-  }
+  ]
 }
