@@ -1,6 +1,5 @@
-// src/middleware/auth.js
 const jwt = require('jsonwebtoken');
-const secret = 'your_jwt_secret';
+const secret = process.env.JWT_SECRET;
 
 const auth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
