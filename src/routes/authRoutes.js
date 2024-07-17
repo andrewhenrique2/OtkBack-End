@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { check, validationResult } = require('express-validator');
 const db = require('../database/database');
-const auth = require('../middleware/auth'); // Adicione esta linha para importar o middleware `auth`
+const auth = require('../middleware/auth'); // Middleware de autenticação
 const router = express.Router();
 
 const secret = process.env.JWT_SECRET;
@@ -12,7 +12,7 @@ const secret = process.env.JWT_SECRET;
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Registro
+// Registro de usuário
 router.post('/register', [
   check('username').not().isEmpty().withMessage('Username é obrigatório'),
   check('email').isEmail().withMessage('Email inválido'),
@@ -26,6 +26,7 @@ router.post('/register', [
 
   const { username, email, password } = req.body;
 
+  // Hash da senha e inserção no banco de dados
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error('Erro ao hash da senha:', err);
@@ -43,7 +44,7 @@ router.post('/register', [
   });
 });
 
-// Login
+// Login de usuário
 router.post('/login', [
   check('email').isEmail().withMessage('Email inválido'),
   check('password').exists().withMessage('Senha é obrigatória')
@@ -56,6 +57,7 @@ router.post('/login', [
 
   const { email, password } = req.body;
 
+  // Verificação do usuário e comparação de senhas
   db.get("SELECT * FROM users WHERE email = ?", [email], (err, user) => {
     if (err) {
       console.error('Erro ao buscar usuário no banco de dados:', err);
@@ -82,7 +84,7 @@ router.post('/login', [
   });
 });
 
-// Rota para obter informações do usuário logado
+// Obter informações do usuário logado
 router.get('/me', auth, (req, res) => {
   db.get("SELECT id, username, email, role FROM users WHERE id = ?", [req.user.id], (err, user) => {
     if (err) {
@@ -94,11 +96,11 @@ router.get('/me', auth, (req, res) => {
       return res.status(400).json({ message: 'Usuário não encontrado' });
     }
 
-    res.json(user);
+    res.json(user); // Retorna as informações do usuário
   });
 });
 
-// Rota para mudar a senha do usuário logado
+// Mudar senha do usuário logado
 router.put('/change-password', auth, [
   check('password').isLength({ min: 6 }).withMessage('Senha deve ter no mínimo 6 caracteres')
 ], (req, res) => {
@@ -111,6 +113,7 @@ router.put('/change-password', auth, [
 
   const { password } = req.body;
 
+  // Hash da nova senha e atualização no banco de dados
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error('Erro ao hash da nova senha:', err);
@@ -127,13 +130,13 @@ router.put('/change-password', auth, [
   });
 });
 
-// Rota para upload de avatar
+// Upload de avatar
 router.post('/upload-avatar', [auth, upload.single('avatar')], (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'Nenhum arquivo enviado' });
   }
 
-  const avatar = req.file.buffer.toString('base64'); // Exemplo de armazenamento como base64 no banco de dados
+  const avatar = req.file.buffer.toString('base64'); // Armazena o avatar como base64
   db.run("UPDATE users SET avatar = ? WHERE id = ?", [avatar, req.user.id], function (err) {
     if (err) {
       console.error('Erro ao fazer upload do avatar:', err);

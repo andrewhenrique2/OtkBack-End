@@ -4,11 +4,18 @@ const sqlite3 = require('sqlite3').verbose();
 
 // Defina o caminho para o arquivo de banco de dados
 const dbFileName = 'anime.db';
-const dbPath = path.join(process.env.NODE_ENV === 'production' ? '/tmp' : __dirname, dbFileName);
+const dbPath = path.join(__dirname, '..', 'temp', dbFileName);
+const sourcePath = path.join(__dirname, dbFileName);
 
 // Verifique se o arquivo de banco de dados existe na origem e copie para o diretório temporário se necessário
-if (process.env.NODE_ENV === 'production' && fs.existsSync(path.join(__dirname, dbFileName)) && !fs.existsSync(dbPath)) {
-  fs.copyFileSync(path.join(__dirname, dbFileName), dbPath);
+if (!fs.existsSync(dbPath)) {
+  if (fs.existsSync(sourcePath)) {
+    fs.copyFileSync(sourcePath, dbPath);
+    console.log('Arquivo copiado com sucesso.');
+  } else {
+    console.error('Erro: arquivo não encontrado:', sourcePath);
+    process.exit(1); // Sai do processo com um código de erro
+  }
 }
 
 const db = new sqlite3.Database(dbPath, (err) => {

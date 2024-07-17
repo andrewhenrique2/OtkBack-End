@@ -1,9 +1,12 @@
-require('dotenv').config();
-
+require('dotenv').config(); // Carrega variáveis de ambiente
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
+const fs = require('fs');
+const path = require('path');
+
+// Importando rotas
 const animeRoutes = require('./routes/animeRoutes');
 const filmRoutes = require('./routes/filmRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -12,7 +15,19 @@ const recentAnimeRoutes = require('./routes/recentAnimeRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configurar CSP
+// Caminhos do banco de dados
+const source = path.join(__dirname, 'database', 'anime.db');
+const destination = path.join(__dirname, 'database', 'backup_anime.db');
+
+// Verifica se o arquivo de banco de dados existe e faz uma cópia de backup
+if (fs.existsSync(source)) {
+    fs.copyFileSync(source, destination);
+    console.log('Arquivo copiado com sucesso.');
+} else {
+    console.error('Erro: arquivo não encontrado:', source);
+}
+
+// Configurar Content Security Policy (CSP)
 app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
@@ -23,9 +38,9 @@ app.use(helmet.contentSecurityPolicy({
   }
 }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(bodyParser.json()); // Middleware para parsear JSON
+app.use(bodyParser.urlencoded({ extended: true })); // Middleware para parsear URL-encoded
+app.use(cors()); // Habilita CORS
 
 // Adicionando rotas
 app.use('/api', animeRoutes);
@@ -33,7 +48,7 @@ app.use('/api', filmRoutes);
 app.use('/api', recentAnimeRoutes);
 app.use('/auth', authRoutes);
 
-// Adicionando rota básica para verificar a API
+// Rota básica para verificar a API
 app.get('/', (req, res) => {
   res.send('API está funcionando');
 });
